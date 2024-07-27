@@ -14,18 +14,18 @@ Keywords: vertices(vertex), edges
 ⭐
 Data to manage graph
 const adjacencyList = {
-    'A': { // current vertex
-        'B': 5, // next (or neighbour vertex) and their weight
-        'C': 10
-    },
-    'B': {
-        'A': 5,
-        'C': 3
-    },
-    'C': {
-        'A': 10,
-        'B': 3
-    }
+	'A': { // current vertex
+		'B': 5, // next (or neighbour vertex) and their weight
+		'C': 10
+	},
+	'B': {
+		'A': 5,
+		'C': 3
+	},
+	'C': {
+		'A': 10,
+		'B': 3
+	}
 };
 
 ⭐
@@ -33,6 +33,11 @@ Basic Functions Needed in a Graph
 	Add update Vertex and Edges
 	Traverse ()
 
+⭐
+To traverse by weight there are some algorightm involved but we'll do without them
+These algorithms are 
+	Dijkstra’s Algorithm
+	Prim’s Algorithm
 
 */
 
@@ -45,21 +50,52 @@ class Graph {
 		});
 	}
 
-	#increment(vertex) { this.data[vertex].count++ }
-	#decrement(vertex) { this.data[vertex].count-- }
+	#increment(vertex) { this.data[ vertex ].count++; }
+	#decrement(vertex) { this.data[ vertex ].count--; }
 
 	#weight(v1, v2, weight) {
-		this.data[v1].vertices[v2] = weight;
+		this.data[ v1 ].vertices[ v2 ] = weight;
 	}
 
 	addEdge(vertex1, vertex2, weight) {
-		if(!this.data[vertex1]) this.data[vertex1] = {count: 0, vertices: {}};
+		if (!this.data[ vertex1 ]) this.data[ vertex1 ] = { count: 0, vertices: {} };
 		if (!this.data[ vertex2 ]) this.data[ vertex2 ] = { count: 0, vertices: {} };
 
 		this.#weight(vertex1, vertex2, weight);
 		this.#weight(vertex2, vertex1, weight);
 		this.#increment(vertex1);
 		this.#increment(vertex2);
+	}
+
+	traverseByWeight(vertex, weight, traverse) {
+		/* we need .. max weight in any traverse and count of neighbours */
+
+		let v = this.data[ vertex ];
+
+		if (!traverse) traverse = {
+			parentVertex: vertex,
+			maxWeight: 0,
+			remainingWeight: weight,
+			neighbour: []
+		};
+
+		for (let adjecent in v.vertices) {
+			let currentWeight = v.vertices[ adjecent ];
+			let traversed = traverse.neighbour.includes(adjecent);
+			if (currentWeight <= weight) {
+				if (!traversed && adjecent.toString() !== traverse.parentVertex.toString()) {
+					traverse.neighbour.push(adjecent);
+					this.traverseByWeight(adjecent, weight - currentWeight, traverse);
+				}
+				if (currentWeight > traverse.maxWeight) traverse.maxWeight = currentWeight;
+			}
+		}
+
+		return {
+			vertex,
+			maxWeight: traverse.maxWeight,
+			neighbour: traverse.neighbour
+		};
 	}
 }
 
@@ -69,11 +105,50 @@ class Graph {
 const edges = [ [ 0, 1, 3 ], [ 1, 2, 1 ], [ 1, 3, 4 ], [ 2, 3, 1 ] ];
 
 
-const graph = new Graph(edges);
+// const graph = new Graph(edges);
 
 
-console.log(graph.data[1]);
+// console.log(graph.data);
 
+
+// console.log(graph.traverseByWeight(0, 4));
+// console.log(graph.traverseByWeight(1, 4));
+// console.log(graph.traverseByWeight(2, 4));
+// console.log(graph.traverseByWeight(3, 4));
+
+
+var findTheCity = function (n, edges, distanceThreshold) {
+	const graph = new Graph(edges);
+	console.log(graph);
+
+	let lowestNeighbour = Infinity;
+	const items = {};
+
+	for (let vertex in graph.data) {
+		let data = graph.traverseByWeight(vertex, distanceThreshold);
+		let isLonlier = data.neighbour.length <= lowestNeighbour;
+		if (isLonlier) lowestNeighbour = data.neighbour.length;
+		else continue;
+		if (!items[ lowestNeighbour ]) items[ lowestNeighbour ] = [];
+		items[ lowestNeighbour ].push(data);
+	}
+
+	console.log(items);
+
+	let
+		maxWeight = 0, output = null,
+		arr = items[ lowestNeighbour ];
+
+	for (let i = 0; i < arr.length; i++) {
+		let el = arr[i];
+		if(el.maxWeight > maxWeight) output = el.vertex;
+	}
+
+	console.log(output);
+	return parseInt(output);
+};
+
+findTheCity(4, edges, 4);
 
 
 
