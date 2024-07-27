@@ -39,15 +39,22 @@ These algorithms are
 	Dijkstra’s Algorithm
 	Prim’s Algorithm
 
+
+❌ Without proper traversal method it's bit complicated .. we'll use BFS (bredth first traversal)
 */
 
 
 class Graph {
-	constructor(edges = []) {
+	constructor(edges = [], vertexCount = 0) {
 		this.data = {};
 		edges.forEach(el => {
 			this.addEdge(...el);
 		});
+		for(let i = 0; i < vertexCount; i++) {
+			if (this.data[i] === undefined) {
+				this.data[i] = {count: 0, vertices: {}}
+			}
+		}
 	}
 
 	#increment(vertex) { this.data[ vertex ].count++; }
@@ -76,17 +83,19 @@ class Graph {
 			parentVertex: vertex,
 			maxWeight: 0,
 			remainingWeight: weight,
-			neighbour: []
+			neighbour: [],
 		};
 
+		// console.log(`===>>`, vertex, v);
 		for (let adjecent in v.vertices) {
 			let currentWeight = v.vertices[ adjecent ];
 			let traversed = traverse.neighbour.includes(adjecent);
+			// if(traverse.parentVertex === 0) console.log(vertex, currentWeight, traverse.remainingWeight);
 			if (currentWeight <= weight) {
 				if (!traversed && adjecent.toString() !== traverse.parentVertex.toString()) {
 					traverse.neighbour.push(adjecent);
-					this.traverseByWeight(adjecent, weight - currentWeight, traverse);
 				}
+				this.traverseByWeight(adjecent, weight - currentWeight, traverse);
 				if (currentWeight > traverse.maxWeight) traverse.maxWeight = currentWeight;
 			}
 		}
@@ -102,7 +111,10 @@ class Graph {
 
 
 
-const edges = [ [ 0, 1, 3 ], [ 1, 2, 1 ], [ 1, 3, 4 ], [ 2, 3, 1 ] ];
+// const edges = [ [ 0, 1, 3 ], [ 1, 2, 1 ], [ 1, 3, 4 ], [ 2, 3, 1 ] ];
+// const edges = [ [ 0, 3, 7 ], [ 2, 4, 1 ], [ 0, 1, 5 ], [ 2, 3, 10 ], [ 1, 3, 6 ], [ 1, 2, 1 ] ];
+// const distanceThreshold = 417;
+// const n = 7;
 
 
 // const graph = new Graph(edges);
@@ -117,15 +129,22 @@ const edges = [ [ 0, 1, 3 ], [ 1, 2, 1 ], [ 1, 3, 4 ], [ 2, 3, 1 ] ];
 // console.log(graph.traverseByWeight(3, 4));
 
 
+/**
+ * @param {number} n
+ * @param {number[][]} edges
+ * @param {number} distanceThreshold
+ * @return {number}
+ */
 var findTheCity = function (n, edges, distanceThreshold) {
-	const graph = new Graph(edges);
-	console.log(graph);
+	const graph = new Graph(edges, n);
+	console.log(graph.data);
 
 	let lowestNeighbour = Infinity;
 	const items = {};
 
-	for (let vertex in graph.data) {
+	for (let vertex = 0; vertex < n; vertex++) {
 		let data = graph.traverseByWeight(vertex, distanceThreshold);
+		console.log(data);
 		let isLonlier = data.neighbour.length <= lowestNeighbour;
 		if (isLonlier) lowestNeighbour = data.neighbour.length;
 		else continue;
@@ -133,7 +152,7 @@ var findTheCity = function (n, edges, distanceThreshold) {
 		items[ lowestNeighbour ].push(data);
 	}
 
-	console.log(items);
+	console.log(`$`, items, lowestNeighbour);
 
 	let
 		maxWeight = 0, output = null,
@@ -141,20 +160,23 @@ var findTheCity = function (n, edges, distanceThreshold) {
 
 	for (let i = 0; i < arr.length; i++) {
 		let el = arr[i];
-		if(el.maxWeight > maxWeight) output = el.vertex;
+		console.log(`el: `, el);
+		if(el.maxWeight >= maxWeight) output = el.vertex;
 	}
 
 	console.log(output);
 	return parseInt(output);
 };
 
-findTheCity(4, edges, 4);
+// findTheCity(n, edges, distanceThreshold);
+
+findTheCity(6, [ [ 0, 1, 10 ], [ 0, 2, 1 ], [ 2, 3, 1 ], [ 1, 3, 1 ], [ 1, 4, 1 ], [ 4, 5, 10 ] ], 20)
 
 
 
 
 
-
+export default function temp() {}
 
 
 /* 
