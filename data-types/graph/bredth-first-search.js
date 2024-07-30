@@ -17,27 +17,24 @@ class Graph {
 		this.graph[vertex2].push([vertex1, weight]);
 	}
 
-	bfs(start) {
+	bfs(start, distanceThreshold) {
 		const queue = [[start, 0]];
-		const traverse = [];
+		const visited = new Set([start]);
 		let index = 0;
 
 		while(index < queue.length) {
 			console.log(queue[ index ]);
 			const [vertex, weight] = queue[index++];
 			let vertices = this.graph[ vertex ];
-			// if(traverse.findIndex(([v, weight]) => v === ))queue.push(...vertices);
 
 			vertices.forEach(el => {
-				let temp = queue.findIndex(([ v, weight ]) => v === el[ 0 ]);
-
-				if(temp === -1) queue.push(el);
+				if(!visited.has(el[0])) queue.push(el);
 			})
 
-			traverse.push([vertex, weight]);
+			visited.add(vertex);
 		}
 
-		return traverse;
+		return [...visited];
 	}
 }
 
@@ -52,8 +49,8 @@ class Graph {
  */
 var findTheCity = function (n, edges, distanceThreshold) {
 	const graph = new Graph(edges, n);
-	let bfs1 = graph.bfs(1);
-	console.log(graph);
+	let bfs1 = graph.bfs(1, distanceThreshold);
+	console.log(bfs1);
 };
 
 
