@@ -44,7 +44,7 @@ class Graph {
 		/* index: toCity, value[fromCity, distance] */
 		const distanceList = Array.from({ length: this.verticesCount }, () => [ start, Infinity ]);
 		const visited = new Set([start]);
-		const queue = [[start, start]];
+		const queue = [[start, start]]; // [[fromVertex, toVertex]]
 		distanceList[start][1] = 0;
 		let index = 0;
 		
@@ -57,9 +57,13 @@ class Graph {
 			const [$fromCity, distance] = distanceList[currentCity];
 
 			let distanceFromMap = neighbours[fromCity] || Infinity;
+			// let isInLimit = distanceFromMap
+			let previousDistance = distanceList[fromCity][1];
+			let totalDistance = distanceFromMap+previousDistance;
 
-			if(distanceFromMap < distance) {
-				distanceList[ currentCity ] = [ fromCity, distanceFromMap ];
+
+			if(distanceFromMap < distance && totalDistance < distanceThreshold) {
+				distanceList[ currentCity ] = [ fromCity, totalDistance ];
 			}
 			
 			for(let nVertex in neighbours) {
@@ -94,6 +98,6 @@ var findTheCity = function (n, edges, distanceThreshold) {
 };
 
 
-// findTheCity(6, [ [ 0, 1, 10 ], [ 0, 2, 1 ], [ 2, 3, 1 ], [ 1, 3, 1 ], [ 1, 4, 1 ], [ 4, 5, 10 ] ], 20);
+findTheCity(6, [ [ 0, 1, 10 ], [ 0, 2, 1 ], [ 2, 3, 1 ], [ 1, 3, 1 ], [ 1, 4, 1 ], [ 4, 5, 10 ] ], 20);
 // findTheCity(4, [[0, 1, 2], [1, 2, 3], [1, 3, 4], [2, 3, 4]], 6);
-findTheCity(6, [[0,1,3], [0,2,2], [1,3,4], [2,3,3], [3,4,5]], 10);
+// findTheCity(6, [[0,1,3], [0,2,2], [1,3,4], [2,3,3], [3,4,5]], 9);
