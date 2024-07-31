@@ -1,3 +1,4 @@
+import PriorityQueue from "../queeue/priority-queue.js";
 
 class Graph {
 	constructor(edges = [], verticesCount = 0) {
@@ -43,8 +44,9 @@ class Graph {
 	djkstra(start, distanceThreshold) {
 		/* index: toCity, value[fromCity, distance] */
 		const distanceList = Array.from({ length: this.verticesCount }, () => [ start, Infinity ]);
-		const visited = new Set([start]);
+		const visited = new Set();
 		const queue = [[start, start]]; // [[fromVertex, toVertex]]
+		const pQueue = new PriorityQueue();
 		distanceList[start][1] = 0;
 		let index = 0;
 		
@@ -52,29 +54,44 @@ class Graph {
 			const [fromCity, currentCity] = queue[index++];
 			const neighbours = this.verticesMap[currentCity];
 			
+			if(visited.has(currentCity)) continue;
 			visited.add(currentCity);
 
-			const [$fromCity, distance] = distanceList[currentCity];
+			const [currentCityFrom, currentDistance] = distanceList[currentCity];
 
 			let distanceFromMap = neighbours[fromCity] || Infinity;
 			// let isInLimit = distanceFromMap
-			let previousDistance = distanceList[fromCity][1];
-			let totalDistance = distanceFromMap+previousDistance;
+			// let previousDistance = distanceList[fromCity][1];
+			// let totalDistance = distanceFromMap+previousDistance;
 
 
-			if(distanceFromMap < distance && totalDistance < distanceThreshold) {
-				distanceList[ currentCity ] = [ fromCity, totalDistance ];
-			}
+			// if(distanceFromMap < currentDistance && totalDistance < distanceThreshold) {
+			// 	distanceList[ currentCity ] = [ fromCity, totalDistance ];
+			// }
 			
-			for(let nVertex in neighbours) {
-				nVertex = parseInt(nVertex);
-				if(!visited.has(nVertex)) queue.push([currentCity, nVertex]);
+			for(let [neighbourId, neighbourDistance] of Object.entries(neighbours)) {
+				neighbourId = parseInt(neighbourId);
+				// currently i am on a neighbour of my current visiting city
+				// I need to check - if they are more easily reachable from existing path.
+				// So I'll get their current distance from whaterver path they are currently easily accessible
+				let [neighbourFromId, neighbourCurrentDistance] = distanceList[neighbourId];
+				// And calculate from current city this neighbour's distance
+				let neighbourDistanceFromCurrentCity = currentDistance + neighbourDistance;
+				// And if can reach quicker then existing distance update .. 
+				let canVisitEasily = neighbourDistanceFromCurrentCity < neighbourCurrentDistance;
+
+				if(canVisitEasily) {
+					distanceList[neighbourId] = [currentCity, neighbourDistanceFromCurrentCity];
+					queue.push([currentCity, neighbourId])
+				}
+				neighbourId = parseInt(neighbourId);
+				// if(!visited.has(neighbourId)) queue.push([currentCity, neighbourId]);
 			}
 
 			// neighbours.map(([nVertex, nWeight]) => {
 			// 	if(!visited.has(nVertex)) queue.push(nVertex);
 			// })
-
+			'a';
 		}
 
 		console.log(distanceList);
@@ -92,9 +109,9 @@ class Graph {
  */
 var findTheCity = function (n, edges, distanceThreshold) {
 	const graph = new Graph(edges, n);
-	let bfs1 = graph.bfs(1, distanceThreshold);
+	// let bfs1 = graph.bfs(1, distanceThreshold);
 	graph.djkstra(0, distanceThreshold);
-	console.log(bfs1);
+	// console.log(bfs1);
 };
 
 
