@@ -101,6 +101,7 @@ class Graph {
 			'a';
 		}
 
+		console.log(distanceList);
 		// return [distanceList.reduce((sum, dist) => sum + (isFinite(dist[1]) ? 1: 0) , 0), maxweight];
 		// return [distanceList, maxweight];
 		return [distanceList.filter(el => isFinite(el[1]) && el[1] > 0), maxweight];
@@ -122,9 +123,15 @@ var findTheCity = function (n, edges, distanceThreshold) {
 	// let bfs1 = graph.bfs(1, distanceThreshold);
 	let minNeighbour = Infinity, minNeighbourIndex = NaN, maxDistance = 0;
 	for(let i = 0; i < n; i++) {
+		console.log(`---`, i);
 		let [ distanceList, maxweight ] = graph.djkstra(i, distanceThreshold);
 
-		if (distanceList.length <= minNeighbour && maxweight >= maxDistance) minNeighbourIndex = i;
+		console.log(`++`, distanceList, maxweight);
+		if (distanceList.length <= minNeighbour && maxweight >= maxDistance) {
+			minNeighbourIndex = i;
+			minNeighbour = distanceList.length;
+			maxweight = maxDistance;
+		}
 	}
 	// console.log(bfs1);
 	console.log(minNeighbourIndex);
@@ -132,6 +139,7 @@ var findTheCity = function (n, edges, distanceThreshold) {
 };
 
 
-findTheCity(6, [ [ 0, 1, 10 ], [ 0, 2, 1 ], [ 2, 3, 1 ], [ 1, 3, 1 ], [ 1, 4, 1 ], [ 4, 5, 10 ] ], 20);
+// findTheCity(6, [ [ 0, 1, 10 ], [ 0, 2, 1 ], [ 2, 3, 1 ], [ 1, 3, 1 ], [ 1, 4, 1 ], [ 4, 5, 10 ] ], 20);
 // findTheCity(4, [[0, 1, 2], [1, 2, 3], [1, 3, 4], [2, 3, 4]], 6);
 // findTheCity(6, [[0,1,3], [0,2,2], [1,3,4], [2,3,3], [3,4,5]], 9);
+findTheCity(5, [ [ 0, 1, 2 ], [ 0, 4, 8 ], [ 1, 2, 3 ], [ 1, 4, 2 ], [ 2, 3, 1 ], [ 3, 4, 1 ] ], 2);
