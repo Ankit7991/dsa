@@ -50,15 +50,12 @@ class Graph {
 		pQueue.enqueue(0, [start, start]);
 		distanceList[start][1] = 0;
 		let index = 0;
+		let maxweight = 0;
 		
-		console.log(pQueue.isEmpty());
-		console.log(pQueue.isEmpty());
 		// while (queue.length > index) {
 		while(!pQueue.isEmpty()) {
 			// const [fromCity, currentCity] = queue[index++];
-			console.log(pQueue);
 			const dequeue = pQueue.dqueue();
-			console.log(dequeue);
 			const [fromCity, currentCity] = dequeue.data;
 			const neighbours = this.verticesMap[currentCity];
 			
@@ -90,6 +87,7 @@ class Graph {
 
 				if(canVisitEasily && neighbourDistanceFromCurrentCity <= distanceThreshold) {
 					distanceList[neighbourId] = [currentCity, neighbourDistanceFromCurrentCity];
+					maxweight = neighbourDistanceFromCurrentCity;
 					// queue.push([currentCity, neighbourId])
 					pQueue.enqueue(neighbourDistanceFromCurrentCity, [ currentCity, neighbourId ]);
 				}
@@ -103,7 +101,10 @@ class Graph {
 			'a';
 		}
 
-		console.log(distanceList);
+		// return [distanceList.reduce((sum, dist) => sum + (isFinite(dist[1]) ? 1: 0) , 0), maxweight];
+		// return [distanceList, maxweight];
+		return [distanceList.filter(el => isFinite(el[1]) && el[1] > 0), maxweight];
+
 	}
 }
 
@@ -119,11 +120,18 @@ class Graph {
 var findTheCity = function (n, edges, distanceThreshold) {
 	const graph = new Graph(edges, n);
 	// let bfs1 = graph.bfs(1, distanceThreshold);
-	graph.djkstra(0, distanceThreshold);
+	let minNeighbour = Infinity, minNeighbourIndex = NaN, maxDistance = 0;
+	for(let i = 0; i < n; i++) {
+		let [ distanceList, maxweight ] = graph.djkstra(i, distanceThreshold);
+
+		if (distanceList.length <= minNeighbour && maxweight >= maxDistance) minNeighbourIndex = i;
+	}
 	// console.log(bfs1);
+	console.log(minNeighbourIndex);
+	return minNeighbourIndex;
 };
 
 
-findTheCity(6, [ [ 0, 1, 10 ], [ 0, 2, 1 ], [ 2, 3, 1 ], [ 1, 3, 1 ], [ 1, 4, 1 ], [ 4, 5, 10 ] ], 10);
+findTheCity(6, [ [ 0, 1, 10 ], [ 0, 2, 1 ], [ 2, 3, 1 ], [ 1, 3, 1 ], [ 1, 4, 1 ], [ 4, 5, 10 ] ], 20);
 // findTheCity(4, [[0, 1, 2], [1, 2, 3], [1, 3, 4], [2, 3, 4]], 6);
 // findTheCity(6, [[0,1,3], [0,2,2], [1,3,4], [2,3,3], [3,4,5]], 9);
