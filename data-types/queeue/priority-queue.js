@@ -1,56 +1,51 @@
 
 /* priority queue without heap */
 class PriorityQueue {
-
 	constructor() {
 		this.queue = [];
 		this.at = 0;
 	}
 
-
-	enqueue(weight, item = {}) {
-		item.weight = weight;
-
+	enqueue(weight, data) {
+		const item = { data, weight };
 		let added = false;
-		for(let i = this.at; i < this.queue.length; i++) {
-			if(added) break;
-			const {weight: newWeight} = this.queue[i];
-			if(weight < newWeight) {
+
+		for (let i = this.at; i < this.queue.length; i++) {
+			if (item.weight < this.queue[ i ].weight) {
 				this.queue.splice(i, 0, item);
 				added = true;
+				break;
 			}
 		}
 
-		if(!added) {
+		if (!added) {
 			this.queue.push(item);
 		}
 	}
 
-	dequeue() {
-		if(this.isEmpty()) return null; 
-		const val = this.queue[this.at];
-		this.queue[this.at] = null;
+	dqueue() {
+		if (this.isEmpty()) return null;
+		const val = this.queue[ this.at ];
 		this.at++;
-		console.log(val);
 		return val;
 	}
 
 	isEmpty() {
-		return this.queue.length -1 === this.at;
+		return this.at >= this.queue.length;
 	}
 }
 
 
-let pque = new PriorityQueue();
-pque.enqueue(10, {name: 'gujarati thali'});
-pque.enqueue(15, {name: 'burger'});
-pque.dequeue();
-pque.enqueue(3, {name: 'pakodi'})
-pque.enqueue(3, {name: 'abc'})
-pque.dequeue();
-pque.enqueue(20, {name: 'abc'})
 
-console.log(pque);
+// let pque = new PriorityQueue();
+// console.log(pque.isEmpty());
+// pque.enqueue(10, {name: 'gujarati thali'});
+// console.log(pque.isEmpty());
+// pque.enqueue(0, {name: 'burger'});
+// console.log(pque.isEmpty());
+// let d = pque.dequeue();
+
+// console.log(pque);
 
 
 export default PriorityQueue;

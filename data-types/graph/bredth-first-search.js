@@ -45,13 +45,21 @@ class Graph {
 		/* index: toCity, value[fromCity, distance] */
 		const distanceList = Array.from({ length: this.verticesCount }, () => [ start, Infinity ]);
 		const visited = new Set();
-		const queue = [[start, start]]; // [[fromVertex, toVertex]]
+		// const queue = [[start, start]]; // [[fromVertex, toVertex]]
 		const pQueue = new PriorityQueue();
+		pQueue.enqueue(0, [start, start]);
 		distanceList[start][1] = 0;
 		let index = 0;
 		
-		while (queue.length > index) {
-			const [fromCity, currentCity] = queue[index++];
+		console.log(pQueue.isEmpty());
+		console.log(pQueue.isEmpty());
+		// while (queue.length > index) {
+		while(!pQueue.isEmpty()) {
+			// const [fromCity, currentCity] = queue[index++];
+			console.log(pQueue);
+			const dequeue = pQueue.dqueue();
+			console.log(dequeue);
+			const [fromCity, currentCity] = dequeue.data;
 			const neighbours = this.verticesMap[currentCity];
 			
 			if(visited.has(currentCity)) continue;
@@ -80,9 +88,10 @@ class Graph {
 				// And if can reach quicker then existing distance update .. 
 				let canVisitEasily = neighbourDistanceFromCurrentCity < neighbourCurrentDistance;
 
-				if(canVisitEasily) {
+				if(canVisitEasily && neighbourDistanceFromCurrentCity <= distanceThreshold) {
 					distanceList[neighbourId] = [currentCity, neighbourDistanceFromCurrentCity];
-					queue.push([currentCity, neighbourId])
+					// queue.push([currentCity, neighbourId])
+					pQueue.enqueue(neighbourDistanceFromCurrentCity, [ currentCity, neighbourId ]);
 				}
 				neighbourId = parseInt(neighbourId);
 				// if(!visited.has(neighbourId)) queue.push([currentCity, neighbourId]);
@@ -115,6 +124,6 @@ var findTheCity = function (n, edges, distanceThreshold) {
 };
 
 
-findTheCity(6, [ [ 0, 1, 10 ], [ 0, 2, 1 ], [ 2, 3, 1 ], [ 1, 3, 1 ], [ 1, 4, 1 ], [ 4, 5, 10 ] ], 20);
+findTheCity(6, [ [ 0, 1, 10 ], [ 0, 2, 1 ], [ 2, 3, 1 ], [ 1, 3, 1 ], [ 1, 4, 1 ], [ 4, 5, 10 ] ], 10);
 // findTheCity(4, [[0, 1, 2], [1, 2, 3], [1, 3, 4], [2, 3, 4]], 6);
 // findTheCity(6, [[0,1,3], [0,2,2], [1,3,4], [2,3,3], [3,4,5]], 9);
