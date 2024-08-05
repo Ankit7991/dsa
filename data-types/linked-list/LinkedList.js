@@ -55,11 +55,11 @@ export class LinkedList {
 		this.length++;
 	}
 
-	traverse(n, log = true) {
+	traverse(head,length, n, log = true) {
 		let arr = [],
-		temp = this.head,
+		temp = head,
 		i = 0;
-		while (i < (n || this.length)) {
+		while ( length === null ? temp : i < (n || length)) {
 			if(log) arr.push(JSON.stringify(temp.data));
 			temp = temp.next;
 			i++;
@@ -76,21 +76,35 @@ export class LinkedList {
 		if(at = this.at) this.at = this.at?.next || null;
 		return this.at;
 	}
+
+	reverse() {
+		let prev = null;
+		let current = this.head;
+		let next = current.next;
+		let stop = false;
+		while(!stop) {
+			if(current === null) stop = true; 
+			console.log(`(${current?.data})`)
+			this.traverse(current, null)
+			this.traverse(prev, null)
+			if(current) current.next = prev;
+			prev = current;
+			current = next;
+			next = next?.next;
+		}
+	}
 }
 
 
-// const ll = new LinkedList();
-// console.log(ll);
-// ll.add(10);
-// console.log(ll);
-// ll.add(11);
-// console.log(ll.next.next);
-// ll.addBefore(5);
-// ll.add({name: 'anki'});
-// ll.addTail(12);
-// ll.remove(2);
-// ll.traverse();
-// console.log(ll.head, ll.tail);
+const ll = new LinkedList();
+ll.add(10);
+ll.add(11);
+ll.addBefore(5);
+ll.addTail(12);
+ll.traverse(ll.head, ll.length);
+ll.reverse();
+
+
 
 
 
