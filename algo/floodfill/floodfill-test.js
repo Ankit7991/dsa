@@ -36,7 +36,7 @@ or
 	[/ . . / . .]
 ] - 4 islands
 */
-class Queue {
+export class Queue {
 	#at = 0;
 	#end = 0;
 
@@ -46,13 +46,13 @@ class Queue {
 		this.#end = data.length;
 	}
 
-	enqueue(value) {
+	push(value) {
 		if(this.isFull()) throw new TypeError('Queue is full');
 		this.data[this.#end] = value;
 		this.#end = (this.#end + 1) % (this.size);
 	}
 
-	dequeue() {
+	pop() {
 		if(this.isEmpty()) throw new TypeError('Queue is empty');
 		const val = this.data[this.#at];
 		this.data[this.#at] = null;
@@ -74,14 +74,14 @@ function findIsland(grid, x, y) {
 	let directions = [[-1, 0], [0, 1], [1, 0], [0, -1]];
 	let isZero = grid[x][y] === 0;
 	while(!queue.isEmpty()) {
-		const [cx, cy] = queue.dequeue();
+		const [cx, cy] = queue.pop();
 		if(grid[cx][cy] === 0) grid[cx][cy] = 'v';
 		else continue;
 		
 		for(let i = 0; i < 4; i++) {
 			let [a, b] = directions[i];
 			if(grid[cx+a]?.[cy+b] === 0) {
-				queue.enqueue([cx+a, cy+b])
+				queue.push([cx+a, cy+b])
 			}
 		}
 	}
