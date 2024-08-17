@@ -1,0 +1,16 @@
+WITH RECURSIVE [NAME] AS(
+	SELECT 
+		..
+		1 AS COUNT
+	FROM ..
+
+	UNION ALL
+
+	SELECT 
+		.. 
+		(C.COUNT + 1) AS COUNT
+	FROM ..
+	JOIN [NAME] C ..
+	WHERE C.COUNT < 100 
+)
+--loop till 100
