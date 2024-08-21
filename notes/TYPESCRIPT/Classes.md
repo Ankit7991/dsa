@@ -72,6 +72,7 @@ class Bird implements Flyable {
 }
 ```
 
+
 ### 5. Generics
 - Generics: TypeScript supports generics, enabling classes to work with different data types while maintaining type safety.
 ```

@@ -84,24 +84,35 @@ const navigateTo = async (dirPath, directoryStack) => {
 		const markdownContent = readFileLines(selection);
 		const lines = markdownContent.split('\n');
 		const topics = [];
+		const parentStack = []; // Stack to keep track of parent topics
 		let currentLine = 0;
 
 		// Extract topics from the Markdown content
 		while (currentLine < lines.length) {
 			if (lines[ currentLine ].startsWith('#')) {
+				// Determine the heading level
+				const level = lines[ currentLine ].match(/^#+/)[ 0 ].length;
 				let topicContent = lines[ currentLine ] + '\n';
+
+				// Update the parent stack for the current level
+				parentStack[ level - 1 ] = lines[ currentLine ];
 				currentLine++;
+
+				// Add content under the current heading
 				while (currentLine < lines.length && !lines[ currentLine ].startsWith('#')) {
 					topicContent += lines[ currentLine ] + '\n';
 					currentLine++;
 				}
-				topics.push(topicContent.trim());
+
+				// Push the topic with level information
+				topics.push({ content: topicContent.trim(), level });
 			} else {
 				currentLine++;
 			}
 		}
 
 		let currentIndex = 0;
+
 
 		const mark = (left, right) => {
 			console.log('\n\n');
@@ -110,6 +121,29 @@ const navigateTo = async (dirPath, directoryStack) => {
 			else if (left) console.log('<-- o ---');
 			else console.log('--- o ---');
 		};
+
+		// const printCurrentTopic = () => {
+		// 	if (topics.length === 0) {
+		// 		console.log('No topics found');
+		// 		return;
+		// 	}
+
+		// 	const topic = topics[ currentIndex ];
+		// 	const chunk = topic.content.split('\n').slice(0, LINES_PER_PAGE).join('\n');
+
+		// 	// Print current topic
+		// 	console.log(topic.content);
+		// 	process.stdout.write('\x1Bc'); // Clears the console
+
+		// 	// Print parent topics
+		// 	for (let i = 0; i < topic.level - 1; i++) {
+		// 		if (parentStack[ i ]) {
+		// 			console.log(parentStack[ i ]);
+		// 		}
+		// 	}
+		// 	console.log(formatMarkdownToTerminal(chunk) || 'End of file');
+		// 	mark(currentIndex > 0, currentIndex < topics.length - 1);
+		// };
 
 		const printCurrentTopic = () => {
 			if (topics.length === 0) {
@@ -122,10 +156,28 @@ const navigateTo = async (dirPath, directoryStack) => {
 			const hasRight = currentIndex < topics.length - 1;
 
 			const topic = topics[ currentIndex ];
-			const chunk = topic.split('\n').slice(0, LINES_PER_PAGE).join('\n');
-			const renderedContent = formatMarkdownToTerminal(chunk);
-			process.stdout.write('\x1Bc'); // Clears the console
-			console.log(renderedContent || 'End of file');
+			let fullContent = '';
+
+			// Concatenate parent topics into fullContent
+			for (let i = 0; i < topic.level - 1; i++) {
+				if (parentStack[ i ]) {
+					fullContent += parentStack[ i ] + '\n';
+				}
+			}
+
+			// Add the current topic's content
+			fullContent += topic.content;
+
+			// Generate the chunk from the full content
+			const chunk = fullContent.split('\n').slice(0, LINES_PER_PAGE).join('\n');
+
+			// Clear console
+			process.stdout.write('\x1Bc');
+
+			// Print the chunk with proper formatting
+			console.log(formatMarkdownToTerminal(chunk) || 'End of file');
+
+			// Print markers
 			mark(hasLeft, hasRight);
 		};
 
