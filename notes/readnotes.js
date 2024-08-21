@@ -1,5 +1,5 @@
 import fs from 'fs';
-import path from 'path';
+import path, { parse } from 'path';
 import { fileURLToPath } from 'url';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
@@ -50,8 +50,8 @@ const navigateTo = async (dirPath, directoryStack) => {
 		value: path.join(dirPath, item.name),
 	}));
 
-	choices.push({ name: 'Back', value: 'back' });
 	choices.push({ name: 'Exit', value: 'exit' });
+	choices.push({ name: 'Back', value: 'back' });
 
 	// Clear console before output
 	process.stdout.write('\x1Bc'); // Clears the console
@@ -88,7 +88,7 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 	const markdownContent = readFileLines(filePath);
 	const lines = markdownContent.split('\n');
 	const topics = [];
-	const parentStack = []; // Stack to keep track of parent topics
+	let parentStack = []; // Stack to keep track of parent topics
 	let currentLine = 0;
 
 	// Extract topics from the Markdown content
@@ -96,11 +96,18 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 		if (lines[ currentLine ].startsWith('#')) {
 			// Determine the heading level
 			const level = lines[ currentLine ].match(/^#+/)[ 0 ].length;
-			let topicContent = lines[ currentLine ] + '\n';
+			// let topicContent = lines[ currentLine ] + '\n';
+			let topicContent = '';
 
 			// Update the parent stack for the current level
 			parentStack[ level - 1 ] = lines[ currentLine ];
 			currentLine++;
+
+			parentStack = parentStack.slice(0, level);
+			
+			// for(let i = level; i < 5; i++) {
+			// 	parentStack[i] = 
+			// }
 
 			// Add content under the current heading
 			while (currentLine < lines.length && !lines[ currentLine ].startsWith('#')) {
@@ -108,8 +115,11 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 				currentLine++;
 			}
 
-			// Push the topic with level information
-			topics.push({ content: topicContent.trim(), level });
+			// Collect headers up to the current level, max 6 elements
+			const headers = parentStack.slice(0, 6).filter(Boolean);
+
+			// Push the topic with level information and headers
+			topics.push({ content: topicContent.trim(), level, headers });
 		} else {
 			currentLine++;
 		}
@@ -131,11 +141,15 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 		let fullContent = '';
 
 		// Concatenate parent topics into fullContent
-		for (let i = 0; i < topic.level - 1; i++) {
-			if (parentStack[ i ]) {
-				fullContent += parentStack[ i ] + '\n';
-			}
-		}
+		// for (let i = 0; i < topic.level - 1; i++) {
+		// 	if (parentStack[ i ]) {
+		// 		fullContent += parentStack[ i ] + '\n';
+		// 	}
+		// }
+
+		fullContent = topic.headers.join('\n');
+
+
 
 		// Add the current topic's content
 		fullContent += topic.content;
