@@ -4,7 +4,8 @@
 ### 1.1. Villain: The Array Beast
 - **Objective:** Learn about arrays and basic operations.
 - **Challenge:** Traverse the forest by solving problems related to array manipulation.
-
+#### the beginner skipped
+- Thinking it's same as the array I've worked so far .. skips this level and goes to linked list
 
 ## 2. The Cave of Linked Lists
 ### 2.1. Villain: The Linked List Phantom
