@@ -9,8 +9,25 @@ const __dirname = path.dirname(__filename);
 
 const EXCLUDED_ITEMS = [ 'node_modules', 'package-lock.json', 'package.json', 'readnotes.js' ];
 
+const formatMarkdownLine = (line) => {
+	if (line.startsWith('# ')) {
+		return chalk.bold.yellow(line); // Heading 1
+	}
+	if (line.startsWith('## ')) {
+		return chalk.bold.underline.yellow(line); // Heading 2
+	}
+	if (line.startsWith('### ')) {
+		return chalk.bold.italic.yellow(line); // Heading 3
+	}
+	if (line.startsWith('- ')) {
+		return chalk.cyan.yellow(line); // Bullet point
+	}
+	return chalk.yellow(line); // Default
+};
+
 const readFileLines = (filePath) => {
-	return fs.readFileSync(filePath, 'utf-8').split('\n');
+	const lines = fs.readFileSync(filePath, 'utf-8').split('\n');
+	return lines.map(line => formatMarkdownLine(line));
 };
 
 const listDirectory = (dirPath) => {
@@ -42,25 +59,38 @@ const navigate = async (currentPath) => {
 
 	if (fs.statSync(selection).isDirectory()) {
 		await navigate(selection);
-	} else {
+	} else if (selection.endsWith('.md')) {
 		const lines = readFileLines(selection);
 		let currentLine = 0;
 
+		const printLines = () => {
+			const chunk = lines.slice(currentLine, currentLine + 10).join('\n');
+			console.log(chunk || 'End of file');
+		};
+
 		const readFile = async () => {
-			console.log(chalk.green(lines[ currentLine ] || 'End of file'));
+			printLines();
 			const { action } = await inquirer.prompt({
 				type: 'list',
 				name: 'action',
 				message: 'Action:',
-				choices: [ 'Next Line', 'Previous Line', 'Back' ],
+				choices: [ 'Next 10 Lines', 'Previous 10 Lines', 'Back' ],
 			});
 
-			if (action === 'Next Line') {
-				if (currentLine < lines.length - 1) currentLine++;
-			} else if (action === 'Previous Line') {
-				if (currentLine > 0) currentLine--;
+			if (action === 'Next 10 Lines') {
+				if (currentLine + 10 < lines.length) {
+					currentLine += 10;
+				} else {
+					currentLine = lines.length; // Move to end
+				}
+			} else if (action === 'Previous 10 Lines') {
+				if (currentLine - 10 >= 0) {
+					currentLine -= 10;
+				} else {
+					currentLine = 0; // Move to start
+				}
 			} else {
-				return;
+				return; // Exit
 			}
 
 			readFile();
