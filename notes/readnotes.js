@@ -1,33 +1,29 @@
-import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import inquirer from 'inquirer';
+import chalk from 'chalk';
+import { marked } from 'marked';
+import TerminalRenderer from 'marked-terminal';
+import keypress from 'keypress';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const EXCLUDED_ITEMS = [ 'node_modules', 'package-lock.json', 'package.json', 'readnotes.js' ];
+const LINES_PER_PAGE = 25; // Number of lines to show per page
 
-const formatMarkdownLine = (line) => {
-	if (line.startsWith('# ')) {
-		return chalk.bold.yellow(line); // Heading 1
-	}
-	if (line.startsWith('## ')) {
-		return chalk.bold.underline.yellow(line); // Heading 2
-	}
-	if (line.startsWith('### ')) {
-		return chalk.bold.italic.yellow(line); // Heading 3
-	}
-	if (line.startsWith('- ')) {
-		return chalk.cyan.yellow(line); // Bullet point
-	}
-	return chalk.yellow(line); // Default
+// Set up the Markdown renderer
+marked.setOptions({
+	renderer: new TerminalRenderer(),
+});
+
+const formatMarkdownToTerminal = (markdown) => {
+	return marked(markdown);
 };
 
 const readFileLines = (filePath) => {
-	const lines = fs.readFileSync(filePath, 'utf-8').split('\n');
-	return lines.map(line => formatMarkdownLine(line));
+	return fs.readFileSync(filePath, 'utf-8');
 };
 
 const listDirectory = (dirPath) => {
@@ -40,64 +36,93 @@ const listDirectory = (dirPath) => {
 };
 
 const navigate = async (currentPath) => {
-	const items = listDirectory(currentPath);
-	const choices = items.map(item => ({
-		name: item.isDirectory ? `${chalk.blue(item.name)}/` : item.name,
-		value: path.join(currentPath, item.name),
-	}));
+	const directoryStack = []; // Stack to manage navigation
+	directoryStack.push(currentPath); // Push initial directory
 
-	choices.push({ name: 'Exit', value: 'exit' });
+	const navigateTo = async (dirPath) => {
+		const items = listDirectory(dirPath);
+		const choices = items.map(item => ({
+			name: item.isDirectory ? `${chalk.blue(item.name)}/` : item.name,
+			value: path.join(dirPath, item.name),
+		}));
 
-	const { selection } = await inquirer.prompt({
-		type: 'list',
-		name: 'selection',
-		message: 'Choose an item:',
-		choices,
-	});
+		choices.push({ name: 'Exit', value: 'exit' });
+		choices.push({ name: 'Back', value: 'back' });
 
-	if (selection === 'exit') return;
+		// Clear console before output
+		process.stdout.write('\x1Bc'); // Clears the console
 
-	if (fs.statSync(selection).isDirectory()) {
-		await navigate(selection);
-	} else if (selection.endsWith('.md')) {
-		const lines = readFileLines(selection);
-		let currentLine = 0;
+		const { selection } = await inquirer.prompt({
+			type: 'list',
+			name: 'selection',
+			message: 'Choose an item:',
+			choices,
+		});
 
-		const printLines = () => {
-			const chunk = lines.slice(currentLine, currentLine + 10).join('\n');
-			console.log(chunk || 'End of file');
-		};
+		if (selection === 'exit') return;
 
-		const readFile = async () => {
-			printLines();
-			const { action } = await inquirer.prompt({
-				type: 'list',
-				name: 'action',
-				message: 'Action:',
-				choices: [ 'Next 10 Lines', 'Previous 10 Lines', 'Back' ],
-			});
-
-			if (action === 'Next 10 Lines') {
-				if (currentLine + 10 < lines.length) {
-					currentLine += 10;
-				} else {
-					currentLine = lines.length; // Move to end
-				}
-			} else if (action === 'Previous 10 Lines') {
-				if (currentLine - 10 >= 0) {
-					currentLine -= 10;
-				} else {
-					currentLine = 0; // Move to start
-				}
+		if (selection === 'back') {
+			if (directoryStack.length > 1) {
+				directoryStack.pop(); // Remove current directory
+				const previousDir = directoryStack.pop(); // Get previous directory
+				return navigateTo(previousDir); // Navigate to previous directory
 			} else {
-				return; // Exit
+				console.log('No previous directory.');
+				return navigateTo(directoryStack[ 0 ]); // Stay in current directory
 			}
+		}
 
-			readFile();
-		};
+		if (fs.statSync(selection).isDirectory()) {
+			directoryStack.push(dirPath); // Save current directory to stack
+			await navigateTo(selection); // Navigate to selected directory
+		} else if (selection.endsWith('.md')) {
+			const markdownContent = readFileLines(selection);
+			let currentLine = 0;
 
-		readFile();
-	}
+			const printLines = () => {
+				const lines = markdownContent.split('\n');
+				const chunk = lines.slice(currentLine, currentLine + LINES_PER_PAGE).join('\n');
+				const renderedContent = formatMarkdownToTerminal(chunk);
+				process.stdout.write('\x1Bc'); // Clears the console
+				console.log(renderedContent || 'End of file');
+			};
+
+			const handleKeyPress = (ch, key) => {
+				if (key.name === 'right') {
+					if (currentLine + LINES_PER_PAGE < markdownContent.split('\n').length) {
+						currentLine += LINES_PER_PAGE;
+					} else {
+						currentLine = markdownContent.split('\n').length; // Move to end
+					}
+					printLines();
+				} else if (key.name === 'left') {
+					if (currentLine - LINES_PER_PAGE >= 0) {
+						currentLine -= LINES_PER_PAGE;
+					} else {
+						currentLine = 0; // Move to start
+					}
+					printLines();
+				} else if (key.name === 'escape') {
+					// Clean up and go back
+					process.stdin.setRawMode(false);
+					process.stdin.removeAllListeners('keypress');
+					return navigateTo(dirPath); // Go back to directory view
+				} else if (key.name === 'c' && key.ctrl) {
+					process.exit(); // Exit on Ctrl+C
+				}
+			};
+
+			keypress(process.stdin);
+			process.stdin.setRawMode(true);
+			process.stdin.resume();
+			process.stdin.on('keypress', handleKeyPress);
+
+			// Print the initial content
+			printLines();
+		}
+	};
+
+	navigateTo(currentPath);
 };
 
 navigate(__dirname);
