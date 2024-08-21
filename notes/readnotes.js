@@ -5,7 +5,6 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { marked } from 'marked';
 import TerminalRenderer from 'marked-terminal';
-import keypress from 'keypress';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,8 +50,8 @@ const navigateTo = async (dirPath, directoryStack) => {
 		value: path.join(dirPath, item.name),
 	}));
 
-	choices.push({ name: 'Exit', value: 'exit' });
 	choices.push({ name: 'Back', value: 'back' });
+	choices.push({ name: 'Exit', value: 'exit' });
 
 	// Clear console before output
 	process.stdout.write('\x1Bc'); // Clears the console
@@ -81,145 +80,132 @@ const navigateTo = async (dirPath, directoryStack) => {
 		directoryStack.push(selection); // Save the new directory to the stack
 		await navigateTo(selection, directoryStack); // Navigate to the selected directory
 	} else if (selection.endsWith('.md')) {
-		const markdownContent = readFileLines(selection);
-		const lines = markdownContent.split('\n');
-		const topics = [];
-		const parentStack = []; // Stack to keep track of parent topics
-		let currentLine = 0;
+		await displayMarkdown(selection, dirPath, directoryStack); // Display Markdown file
+	}
+};
 
-		// Extract topics from the Markdown content
-		while (currentLine < lines.length) {
-			if (lines[ currentLine ].startsWith('#')) {
-				// Determine the heading level
-				const level = lines[ currentLine ].match(/^#+/)[ 0 ].length;
-				let topicContent = lines[ currentLine ] + '\n';
+const displayMarkdown = async (filePath, dirPath, directoryStack) => {
+	const markdownContent = readFileLines(filePath);
+	const lines = markdownContent.split('\n');
+	const topics = [];
+	const parentStack = []; // Stack to keep track of parent topics
+	let currentLine = 0;
 
-				// Update the parent stack for the current level
-				parentStack[ level - 1 ] = lines[ currentLine ];
+	// Extract topics from the Markdown content
+	while (currentLine < lines.length) {
+		if (lines[ currentLine ].startsWith('#')) {
+			// Determine the heading level
+			const level = lines[ currentLine ].match(/^#+/)[ 0 ].length;
+			let topicContent = lines[ currentLine ] + '\n';
+
+			// Update the parent stack for the current level
+			parentStack[ level - 1 ] = lines[ currentLine ];
+			currentLine++;
+
+			// Add content under the current heading
+			while (currentLine < lines.length && !lines[ currentLine ].startsWith('#')) {
+				topicContent += lines[ currentLine ] + '\n';
 				currentLine++;
+			}
 
-				// Add content under the current heading
-				while (currentLine < lines.length && !lines[ currentLine ].startsWith('#')) {
-					topicContent += lines[ currentLine ] + '\n';
-					currentLine++;
-				}
+			// Push the topic with level information
+			topics.push({ content: topicContent.trim(), level });
+		} else {
+			currentLine++;
+		}
+	}
 
-				// Push the topic with level information
-				topics.push({ content: topicContent.trim(), level });
-			} else {
-				currentLine++;
+	let currentIndex = 0;
+
+	const printCurrentTopic = () => {
+		if (topics.length === 0) {
+			console.log('No topics found');
+			return;
+		}
+
+		// Determine the left and right markers based on the current index
+		const hasLeft = currentIndex > 0;
+		const hasRight = currentIndex < topics.length - 1;
+
+		const topic = topics[ currentIndex ];
+		let fullContent = '';
+
+		// Concatenate parent topics into fullContent
+		for (let i = 0; i < topic.level - 1; i++) {
+			if (parentStack[ i ]) {
+				fullContent += parentStack[ i ] + '\n';
 			}
 		}
 
-		let currentIndex = 0;
+		// Add the current topic's content
+		fullContent += topic.content;
 
+		// Generate the chunk from the full content
+		const chunk = fullContent.split('\n').slice(0, LINES_PER_PAGE).join('\n');
 
-		const mark = (left, right) => {
-			console.log('\n\n');
-			if (left && right) console.log('<-- o -->');
-			else if (right) console.log('--- o -->');
-			else if (left) console.log('<-- o ---');
-			else console.log('--- o ---');
-		};
+		// Clear console
+		process.stdout.write('\x1Bc');
 
-		// const printCurrentTopic = () => {
-		// 	if (topics.length === 0) {
-		// 		console.log('No topics found');
-		// 		return;
-		// 	}
+		// Print the chunk with proper formatting
+		console.log(formatMarkdownToTerminal(chunk) || 'End of file');
 
-		// 	const topic = topics[ currentIndex ];
-		// 	const chunk = topic.content.split('\n').slice(0, LINES_PER_PAGE).join('\n');
+		// Print markers
+		mark(hasLeft, hasRight);
+	};
 
-		// 	// Print current topic
-		// 	console.log(topic.content);
-		// 	process.stdout.write('\x1Bc'); // Clears the console
+	const mark = (left, right) => {
+		console.log('\n\n');
+		if (left && right) console.log('<-- o -->');
+		else if (right) console.log('--- o -->');
+		else if (left) console.log('<-- o ---');
+		else console.log('--- o ---');
+	};
 
-		// 	// Print parent topics
-		// 	for (let i = 0; i < topic.level - 1; i++) {
-		// 		if (parentStack[ i ]) {
-		// 			console.log(parentStack[ i ]);
-		// 		}
-		// 	}
-		// 	console.log(formatMarkdownToTerminal(chunk) || 'End of file');
-		// 	mark(currentIndex > 0, currentIndex < topics.length - 1);
-		// };
+	const handleMarkdownNavigation = async () => {
+		const choices = [];
 
-		const printCurrentTopic = () => {
-			if (topics.length === 0) {
-				console.log('No topics found');
-				return;
+		if (currentIndex < topics.length - 1) {
+			choices.push({ name: 'Next Topic', value: 'right' });
+		}
+		if (currentIndex > 0) {
+			choices.push({ name: 'Previous Topic', value: 'left' });
+		}
+		choices.push({ name: 'Back to Directory', value: 'back' });
+
+		const { action } = await inquirer.prompt({
+			type: 'list',
+			name: 'action',
+			message: 'Choose an action:',
+			choices,
+		});
+
+		if (action === 'left') {
+			if (currentIndex > 0) {
+				currentIndex--;
+				printCurrentTopic();
 			}
-
-			// Determine the left and right markers based on the current index
-			const hasLeft = currentIndex > 0;
-			const hasRight = currentIndex < topics.length - 1;
-
-			const topic = topics[ currentIndex ];
-			let fullContent = '';
-
-			// Concatenate parent topics into fullContent
-			for (let i = 0; i < topic.level - 1; i++) {
-				if (parentStack[ i ]) {
-					fullContent += parentStack[ i ] + '\n';
-				}
+			await handleMarkdownNavigation();
+		} else if (action === 'right') {
+			if (currentIndex < topics.length - 1) {
+				currentIndex++;
+				printCurrentTopic();
 			}
+			await handleMarkdownNavigation();
+		} else if (action === 'back') {
+			// Return to the directory view
+			await navigateTo(dirPath, directoryStack);
+		}
+	};
 
-			// Add the current topic's content
-			fullContent += topic.content;
-
-			// Generate the chunk from the full content
-			const chunk = fullContent.split('\n').slice(0, LINES_PER_PAGE).join('\n');
-
-			// Clear console
-			process.stdout.write('\x1Bc');
-
-			// Print the chunk with proper formatting
-			console.log(formatMarkdownToTerminal(chunk) || 'End of file');
-
-			// Print markers
-			mark(hasLeft, hasRight);
-		};
-
-		const handleKeyPress = (ch, key) => {
-			if (key.name === 'right') {
-				if (currentIndex < topics.length - 1) {
-					currentIndex++;
-					printCurrentTopic();
-				} else {
-					console.log('End of topics');
-				}
-			} else if (key.name === 'left') {
-				if (currentIndex > 0) {
-					currentIndex--;
-					printCurrentTopic();
-				} else {
-					console.log('Start of topics');
-				}
-			} else if (key.name === 'escape') {
-				// Clean up and go back
-				process.stdin.setRawMode(false);
-				process.stdin.removeAllListeners('keypress');
-				return navigateTo(dirPath, directoryStack); // Go back to directory view
-			} else if (key.name === 'c' && key.ctrl) {
-				process.exit(); // Exit on Ctrl+C
-			}
-		};
-
-		keypress(process.stdin);
-		process.stdin.setRawMode(true);
-		process.stdin.resume();
-		process.stdin.on('keypress', handleKeyPress);
-
-		// Print the initial content
-		printCurrentTopic();
-	}
+	printCurrentTopic();
+	await handleMarkdownNavigation();
 };
 
 const navigate = async (currentPath) => {
 	const directoryStack = []; // Stack to manage navigation
 	directoryStack.push(currentPath); // Push initial directory
 
+	// Initial navigation to the directory
 	await navigateTo(currentPath, directoryStack);
 };
 
