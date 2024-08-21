@@ -1,3 +1,6 @@
+# Linked List
+
+## Basic Points
 ### Terms
 - Nodes
 - Head
@@ -13,11 +16,12 @@
 - Deletion
 - Traversal
 
-## + Points
+## Pros / Cons
+### Positive Points
 - Dynamic Size
 - Efficient Insertion / Deletion
 
-## - Points
+### Negative Points
 - Memory usage (extra for references)
 - Access Time (O(n))
 
