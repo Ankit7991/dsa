@@ -39,14 +39,11 @@ const listDirectory = (dirPath) => {
 		}));
 };
 
-const navigateTo = async (dirPath) => {
+const navigateTo = async (dirPath, directoryStack) => {
 	if (!dirPath) {
 		console.error('Invalid directory path provided.');
 		return;
 	}
-
-	const directoryStack = []; // Stack to manage navigation
-	directoryStack.push(dirPath); // Push initial directory
 
 	const items = listDirectory(dirPath);
 	const choices = items.map(item => ({
@@ -73,16 +70,16 @@ const navigateTo = async (dirPath) => {
 		if (directoryStack.length > 1) {
 			directoryStack.pop(); // Remove current directory
 			const previousDir = directoryStack.pop(); // Get previous directory
-			return navigateTo(previousDir); // Navigate to previous directory
+			return navigateTo(previousDir, directoryStack); // Navigate to previous directory
 		} else {
 			console.log('No previous directory.');
-			return navigateTo(directoryStack[ 0 ]); // Stay in current directory
+			return navigateTo(directoryStack[ 0 ], directoryStack); // Stay in the current directory
 		}
 	}
 
 	if (fs.statSync(selection).isDirectory()) {
-		directoryStack.push(dirPath); // Save current directory to stack
-		await navigateTo(selection); // Navigate to selected directory
+		directoryStack.push(selection); // Save the new directory to the stack
+		await navigateTo(selection, directoryStack); // Navigate to the selected directory
 	} else if (selection.endsWith('.md')) {
 		const markdownContent = readFileLines(selection);
 		const lines = markdownContent.split('\n');
@@ -106,14 +103,13 @@ const navigateTo = async (dirPath) => {
 
 		let currentIndex = 0;
 
-
 		const mark = (left, right) => {
 			console.log('\n\n');
 			if (left && right) console.log('<-- o -->');
 			else if (right) console.log('--- o -->');
 			else if (left) console.log('<-- o ---');
 			else console.log('--- o ---');
-		}
+		};
 
 		const printCurrentTopic = () => {
 			if (topics.length === 0) {
@@ -121,13 +117,10 @@ const navigateTo = async (dirPath) => {
 				return;
 			}
 
-
 			// Determine the left and right markers based on the current index
 			const hasLeft = currentIndex > 0;
 			const hasRight = currentIndex < topics.length - 1;
 
-			// Call the mark function with appropriate flags
-			
 			const topic = topics[ currentIndex ];
 			const chunk = topic.split('\n').slice(0, LINES_PER_PAGE).join('\n');
 			const renderedContent = formatMarkdownToTerminal(chunk);
@@ -135,7 +128,6 @@ const navigateTo = async (dirPath) => {
 			console.log(renderedContent || 'End of file');
 			mark(hasLeft, hasRight);
 		};
-
 
 		const handleKeyPress = (ch, key) => {
 			if (key.name === 'right') {
@@ -156,7 +148,7 @@ const navigateTo = async (dirPath) => {
 				// Clean up and go back
 				process.stdin.setRawMode(false);
 				process.stdin.removeAllListeners('keypress');
-				return navigateTo(dirPath); // Go back to directory view
+				return navigateTo(dirPath, directoryStack); // Go back to directory view
 			} else if (key.name === 'c' && key.ctrl) {
 				process.exit(); // Exit on Ctrl+C
 			}
@@ -176,7 +168,7 @@ const navigate = async (currentPath) => {
 	const directoryStack = []; // Stack to manage navigation
 	directoryStack.push(currentPath); // Push initial directory
 
-	await navigateTo(currentPath);
+	await navigateTo(currentPath, directoryStack);
 };
 
 // Start the navigation

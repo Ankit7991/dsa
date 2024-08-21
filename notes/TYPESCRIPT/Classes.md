@@ -1,3 +1,6 @@
+# Features
+These features make TypeScript classes more powerful and expressive compared to standard JavaScript classes.
+We'll see them one by one.
 ### 1. Type Annotations
 - Type Safety: TypeScript allows you to specify types for properties and methods, catching errors at compile time.
 ```
@@ -86,4 +89,3 @@ class Box<T> {
 
 const stringBox = new Box<string>('Hello');
 ```
-These features make TypeScript classes more powerful and expressive compared to standard JavaScript classes.

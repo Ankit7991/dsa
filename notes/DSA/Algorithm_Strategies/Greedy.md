@@ -1,4 +1,4 @@
-Greedy Approach
+# Greedy Approach
 
 - First I have used greedy approach in Djkstra (dike-struh) algorighm to find the shortest path.
 
@@ -13,10 +13,12 @@ Greedy Approach
 	- Optimal subtraction
 	- 
 
+## Problem 1
 
 - https://leetcode.com/problems/lemonade-change/description/
 	- Here We give change from highest denominator to lowest that's why it's greedy approach
 
+## Problem 2
 - https://leetcode.com/problems/maximum-distance-in-arrays/
 	- The question ask to find maximum distance between two numbers of any array in list,
 	- And array in list is sorted .. 
