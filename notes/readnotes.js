@@ -2,20 +2,24 @@ import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import inquirer from 'inquirer'; // Import inquirer
+import inquirer from 'inquirer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const EXCLUDED_ITEMS = [ 'node_modules', 'package-lock.json', 'package.json', 'readnotes.js' ];
 
 const readFileLines = (filePath) => {
 	return fs.readFileSync(filePath, 'utf-8').split('\n');
 };
 
 const listDirectory = (dirPath) => {
-	return fs.readdirSync(dirPath).map(item => ({
-		name: item,
-		isDirectory: fs.statSync(path.join(dirPath, item)).isDirectory(),
-	}));
+	return fs.readdirSync(dirPath)
+		.filter(item => !EXCLUDED_ITEMS.includes(item))
+		.map(item => ({
+			name: item,
+			isDirectory: fs.statSync(path.join(dirPath, item)).isDirectory(),
+		}));
 };
 
 const navigate = async (currentPath) => {
