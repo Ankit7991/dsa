@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const EXCLUDED_ITEMS = [ 'node_modules', 'package-lock.json', 'package.json', 'readnotes.js' ];
-const LINES_PER_PAGE = 25; // Number of lines to show per page
+const LINES_PER_PAGE = 100; // Number of lines to show per page
 
 // Set up the Markdown renderer
 marked.setOptions({
