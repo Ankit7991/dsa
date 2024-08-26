@@ -2,6 +2,12 @@
 
 ## August 25
 ### Postorder traversal
+It's a type of DEPTH FIRST TRAVERSAL
+
+Where 
+	you recursively visit all the child nodes (or neighbors) 
+	of a node 
+	before visiting the node itself
 
 #### Leetcode https://leetcode.com/problems/binary-tree-postorder-traversal
 Given the root of a binary tree, return the postorder traversal of its nodes' values.
@@ -13,13 +19,14 @@ Tree:
      5    20
     / \   / \
    1   8 15  25
-       / \
-      12  18
+		 / \
+		12  18
 
 Output:
 
 [1, 8, 5, 12, 18, 15, 25, 20, 10]
 ```
+
 
 #### Code:
 ```
