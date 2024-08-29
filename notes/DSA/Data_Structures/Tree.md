@@ -7,7 +7,7 @@ It's a type of DEPTH FIRST TRAVERSAL
 Where 
 	you recursively visit all the child nodes (or neighbors) 
 	of a node 
-	before visiting the node itself
+	before visiting the node itsel     f
 
 #### Leetcode https://leetcode.com/problems/binary-tree-postorder-traversal
 Given the root of a binary tree, return the postorder traversal of its nodes' values.
@@ -48,3 +48,24 @@ var postorderTraversal = function(root) {
 ```
 
 
+# Tree Algorithms
+
+## FLOOD FILL
+**Flood Fill** is an algorithm used to fill a contiguous region of a grid 
+with a new color or value starting from a given cell. 
+
+It explores all connected cells with the same initial value and replaces them with the new value.
+
+### Approach
+- **DFS Approach**: Recursively replace the target color starting from a cell and move to adjacent cells if they have the same target color.
+- **BFS Approach**: Use a queue to iteratively replace the target color starting from a cell and enqueue adjacent cells with the same target color.
+
+### Use Cases of Flood Fill
+
+- **Image Editing**: Fill areas with color.
+- **Maze Solving**: Find connected paths.
+- **Game Maps**: Paint regions or terrains.
+- **Connectivity Checking**: Identify connected components.
+- **Region Labeling**: Group similar regions in data.
+- **Pattern Recognition**: Detect contiguous patterns.
+- **Graph Exploration**: Traverse connected nodes in graphs.
