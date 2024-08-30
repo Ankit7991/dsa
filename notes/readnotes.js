@@ -192,7 +192,7 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 	const handleMarkdownNavigation = async () => {
 		const choices = [];
 
-		if (currentIndex < topics.length - 1 || currentChildIndex < topics[currentChildIndex].content.length - 1) {
+		if (currentIndex < topics.length - 1 || currentChildIndex < topics[ currentIndex ].content.length - 1) {
 			choices.push({ name: chalk.green('Next Topic'), value: 'right' });
 		}
 		if (currentIndex > 0 || currentChildIndex > 0) {
