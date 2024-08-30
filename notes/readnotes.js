@@ -87,6 +87,7 @@ const navigateTo = async (dirPath, directoryStack) => {
 const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 	const markdownContent = readFileLines(filePath);
 	const lines = markdownContent.split('\n');
+	/**@type {[{content: [], level: number, headers: []}]} */
 	const topics = [];
 	let parentStack = []; // Stack to keep track of parent topics
 	let currentLine = 0;
@@ -110,22 +111,35 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 			// }
 
 			// Add content under the current heading
+			let i = -1, out = [];
 			while (currentLine < lines.length && !lines[ currentLine ].startsWith('#')) {
-				topicContent += lines[ currentLine ] + '\n';
+				let c = lines[ currentLine ];
+				if (c.startsWith('---')) {
+					i++;
+					out[i] = '';
+					currentLine++;
+					continue;
+				}
+				if(out[i] !== undefined) out[ i ] += lines[ currentLine ] + '\n';
+				else topicContent += lines[ currentLine ] + '\n';
 				currentLine++;
 			}
+
+			if(!out.length) out.push(topicContent.trim());
+			else if(topicContent) out.unshift(topicContent.trim());
 
 			// Collect headers up to the current level, max 6 elements
 			const headers = parentStack.slice(0, 6).filter(Boolean);
 
 			// Push the topic with level information and headers
-			topics.push({ content: topicContent.trim(), level, headers });
+			topics.push({ content: out, level, headers });
 		} else {
 			currentLine++;
 		}
 	}
 
 	let currentIndex = 0;
+	let currentChildIndex = 0;
 
 	const printCurrentTopic = () => {
 		if (topics.length === 0) {
@@ -133,9 +147,9 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 			return;
 		}
 
-		// Determine the left and right markers based on the current index
-		const hasLeft = currentIndex > 0;
-		const hasRight = currentIndex < topics.length - 1;
+		// // Determine the left and right markers based on the current index
+		// const hasLeft = currentIndex > 0;
+		// const hasRight = currentIndex < topics.length - 1;
 
 		const topic = topics[ currentIndex ];
 		let fullContent = '';
@@ -152,7 +166,7 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 
 
 		// Add the current topic's content
-		fullContent += topic.content;
+		fullContent += topic.content[currentChildIndex];
 
 		// Generate the chunk from the full content
 		const chunk = fullContent.split('\n').slice(0, LINES_PER_PAGE).join('\n');
@@ -164,25 +178,25 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 		console.log(formatMarkdownToTerminal(chunk) || 'End of file');
 
 		// Print markers
-		mark(hasLeft, hasRight);
+		// mark(hasLeft, hasRight);
 	};
 
-	const mark = (left, right) => {
-		console.log('\n\n');
-		if (left && right) console.log('<-- o -->');
-		else if (right) console.log('--- o -->');
-		else if (left) console.log('<-- o ---');
-		else console.log('--- o ---');
-	};
+	// const mark = (left, right) => {
+	// 	console.log('\n\n');
+	// 	if (left && right) console.log('<-- o -->');
+	// 	else if (right) console.log('--- o -->');
+	// 	else if (left) console.log('<-- o ---');
+	// 	else console.log('--- o ---');
+	// };
 
 	const handleMarkdownNavigation = async () => {
 		const choices = [];
 
-		if (currentIndex < topics.length - 1) {
-			choices.push({ name: 'Next Topic', value: 'right' });
+		if (currentIndex < topics.length - 1 || currentChildIndex < topics[currentChildIndex].content.length - 1) {
+			choices.push({ name: chalk.green('Next Topic'), value: 'right' });
 		}
-		if (currentIndex > 0) {
-			choices.push({ name: 'Previous Topic', value: 'left' });
+		if (currentIndex > 0 || currentChildIndex > 0) {
+			choices.push({ name: chalk.red('Previous Topic'), value: 'left' });
 		}
 		choices.push({ name: 'Back to Directory', value: 'back' });
 
@@ -193,15 +207,27 @@ const displayMarkdown = async (filePath, dirPath, directoryStack) => {
 			choices,
 		});
 
+		let currentChild = topics[ currentIndex ].content;
 		if (action === 'left') {
-			if (currentIndex > 0) {
-				currentIndex--;
+			if (currentIndex >= 0) {
+				if (currentChildIndex > 0) {
+					currentChildIndex--
+				} else {
+					currentIndex--;
+					let currentChild = topics[ currentIndex ].content;
+					currentChildIndex = currentChild.length - 1;
+				}
 				printCurrentTopic();
 			}
 			await handleMarkdownNavigation();
 		} else if (action === 'right') {
-			if (currentIndex < topics.length - 1) {
-				currentIndex++;
+			if (currentIndex <= topics.length - 1) {
+				if (currentChildIndex < currentChild.length - 1) {
+					currentChildIndex++
+				} else {
+					currentIndex++;
+					currentChildIndex = 0;
+				}
 				printCurrentTopic();
 			}
 			await handleMarkdownNavigation();
