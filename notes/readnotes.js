@@ -9,7 +9,7 @@ import TerminalRenderer from 'marked-terminal';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const EXCLUDED_ITEMS = [ 'node_modules', 'package-lock.json', 'package.json', 'readnotes.js' ];
+const EXCLUDED_ITEMS = [ 'node_modules', 'package-lock.json', 'package.json', 'readnotes.js', '.vscode' ];
 const LINES_PER_PAGE = 100; // Number of lines to show per page
 
 // Set up the Markdown renderer
